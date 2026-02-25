@@ -1,4 +1,4 @@
-![](examples/6.jpg)
+![](examples/6.png)
 > *status*: currently stable, and documented
 
 
