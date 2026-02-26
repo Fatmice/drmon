@@ -1,15 +1,15 @@
 -- modifiable variables
-local reactorSide		= "back"
-local monitorSide		= "left"
+local reactorSide			= "back"
+local monitorSide			= "left"
 local outputFluxGate		= "flow_gate_3"
-local inputFluxGate		= "flow_gate_4"
+local inputFluxGate			= "flow_gate_4"
 local deployMitigation		= "top"
 
  -- Important constants
 local maxTemperature		= 8000		-- temperature to emergency stop
 local targetTemperature		= 7950		-- temperature to hold reactor at
 local safeTemperature		= 3500		-- temperature to restart reactor after emergency stop
-local reactorFactor		= 1		-- This is reactorFactor from brand3055 config
+local reactorFactor			= 1		-- This is reactorFactor from brand3055 config
 local targetStrength		= 25		-- lower = more efficient, but less safe
 local targetSatPercent		= 10		-- recommended 10 at minimum
 local lowestSatPercent		= 5		-- recommended 5 at minimum
@@ -20,18 +20,22 @@ local activateOnCharged		= 1
 -- please leave things untouched from here on
 os.loadAPI("lib/f")
 
-local version               = "0.26"
+local version				= "0.26"
 
 -- toggleable via the monitor, use our algorithm to achieve our target field strength or let the user tweak it
 local autoInputGate  		= 1
 local curInputGate   		= 222000
 
 --Working constants
-local tempFactor		= math.min((targetTemperature / 10000) * 50, 99)
+local tempFactor			= math.min((targetTemperature / 10000) * 50, 99)
 local radiationPressure		= (tempFactor * tempFactor * tempFactor * tempFactor) / (100 - tempFactor)
 local temperatureOffset		= 444.7		-- DO NOT Change!
 local fineAdjustments		= 650
-local saveTrigger		= 0
+local fineUnderFlow			= 25
+local underFlow				= 0
+local underCount            = 0
+local overCount            	= 0
+local saveTrigger			= 0
 
 -- auto output gate control
 local autoOutputGate		= 1		-- 1 = auto, 0 = manual
@@ -99,6 +103,7 @@ function save_config()
     sw.writeLine(autoInputGate)
     sw.writeLine(curInputGate)
     sw.writeLine(fineAdjustments)
+    sw.writeLine(underFlow)
     sw.close()
 end
 
@@ -109,6 +114,7 @@ function load_config()
     autoInputGate	= tonumber(sr.readLine())
     curInputGate	= tonumber(sr.readLine())
     fineAdjustments	= tonumber(sr.readLine())
+    underFlow	= tonumber(sr.readLine())
     sr.close()
 end
 
@@ -309,7 +315,7 @@ function update()
 
         f.draw_text_lr(mon, 2, 17, 1, "Fuel ",
                        fuelPercent .. "%", colors.white, fuelColor, colors.black)
-        f.draw_text(mon, 7,17, ri.fuelConversionRate .. "nB/t", colors.white, colors.black)
+        f.draw_text(mon, 7,17, ri.fuelConversionRate .. " nB/t", colors.white, colors.black)
         f.progress_bar(mon, 2, 18, mon.X - 2, fuelPercent, 100, fuelColor, colors.gray)
 
         f.draw_text_lr(mon, 2, 19, 1, "Action ",
@@ -373,6 +379,7 @@ function update()
             local radiativeHeat = -(((conversionLeveL - 1) * radiationPressure) + (1000 * conversionLeveL))
 
             ------ Solve depressed cubic for zero
+            ------ https://uniteasy.com/post/1287/
             local coefficient1 =  radiativeHeat - temperatureOffset
             local coefficient2 = -(100 * coefficient1)
             local r1 = -(coefficient2 / 2)
@@ -433,17 +440,43 @@ function update()
 
             if ri.temperature <= targetTemperature then
                 setFlow = math.max(desiredGeneration, desiredFlow)
+                if math.abs(epsilon * 1000000) > 1 then
+                    if underCount > 5 then
+                        underFlow = math.max(underFlow - 1, fineUnderFlow)
+                        underCount = 0
+                    end
+                    underCount = underCount + 1
+                    --print("underCount: " .. underCount)
+                end
+                overCount = 0
             else
-                setFlow = math.min(desiredGeneration, desiredFlow)
+                print("underFlow: " .. underFlow)
+                setFlow = math.min(desiredGeneration, desiredFlow - underFlow)
+                if math.abs(epsilon * 1000000) > 1 then
+                    if overCount > 5 then
+                        underFlow = underFlow + 1
+                        overCount = 0
+                    end
+                    overCount = overCount + 1
+                    --print("overCount: " .. overCount)
+                end
+                underCount = 0
             end
                 fluxgate.setSignalLowFlow(setFlow)
-                print("setFlow: " .. setFlow)
+                --print("epsilon: " .. (epsilon * 1000000))
+                print("SetFlow: " .. setFlow)
                 saveTrigger = saveTrigger + 1
             if saveTrigger > 599 then
                 save_config()
                 saveTrigger = 0
             end
         end
+
+        ----------------------------------------------------------------
+        -- Reactor Calculations
+        -- Reactor performance:	https://www.desmos.com/calculator/avlmj7nqpb
+        -- Net production:	https://www.desmos.com/calculator/jyd8ptuij3
+        ----------------------------------------------------------------
 
         ----------------------------------------------------------------
         -- safeguards
