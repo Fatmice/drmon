@@ -64,7 +64,7 @@ You can find many very well made youtube tutorials on how to set this up
 > wget https://raw.githubusercontent.com/Fatmice/drmon/refs/heads/master/install.lua install
 > install
 ```
-* Modify `startup` to alter any variables at the top of the file, especially the ones holding the flow_gate_# for input and output.
+* Modify `startup` to alter any variables at the top of the file, especially the ones holding the `flow_gate_#` for input and output.
 ```
 > startup
 ```
