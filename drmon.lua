@@ -9,12 +9,12 @@ local deployMitigation		= "top"
 local maxTemperature		= 8000		-- temperature to emergency stop
 local targetTemperature		= 7950		-- temperature to hold reactor at
 local safeTemperature		= 3500		-- temperature to restart reactor after emergency stop
-local reactorFactor			= 1		-- This is reactorFactor from brand3055 config
+local reactorFactor			= 1		    -- This is reactorFactor from brand3055 config
 local targetStrength		= 25		-- lower = more efficient, but less safe
 local targetSatPercent		= 10		-- recommended 10 at minimum
-local lowestSatPercent		= 5		-- recommended 5 at minimum
+local lowestSatPercent		= 5		    -- recommended 5 at minimum
 local lowestFieldPercent	= 10		-- recommended 10 at minimum
-local refuelTargetPercent	= 5		-- Tickle the dragon
+local refuelTargetPercent	= 5		    -- Tickle the dragon
 local activateOnCharged		= 1
 
 -- please leave things untouched from here on
@@ -38,7 +38,7 @@ local overCount            	= 0
 local saveTrigger			= 0
 
 -- auto output gate control
-local autoOutputGate		= 1		-- 1 = auto, 0 = manual
+local autoOutputGate		= 1		    -- 1 = auto, 0 = manual
 local fuelPercent
 
 -- monitor
@@ -54,9 +54,9 @@ local ri
 
 -- last performed action
 local action			= "None since reboot"
-local emergencyCharge		= false
+local emergencyCharge	= false
 local emergencyTemp		= false
-local newReactorChecked		= false
+local newReactorChecked	= false
 
 -- wrap the peripherals
 monitor      			= peripheral.wrap(monitorSide)
@@ -110,11 +110,11 @@ end
 --read settings from file
 function load_config()
     local sr		= fs.open("config.txt", "r")
-    version		= sr.readLine()
+    version		    = sr.readLine()
     autoInputGate	= tonumber(sr.readLine())
     curInputGate	= tonumber(sr.readLine())
     fineAdjustments	= tonumber(sr.readLine())
-    underFlow	= tonumber(sr.readLine())
+    underFlow	    = tonumber(sr.readLine())
     sr.close()
 end
 
