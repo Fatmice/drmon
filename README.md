@@ -14,12 +14,13 @@ NB: This is for Minecraft 1.21.1. You will need to edit references within the co
 You can find many very well made youtube tutorials on how to set this up
 * [1](https://www.youtube.com/watch?v=jBgXRTL9EkE), by [Brandon3055](https://www.youtube.com/@Brandon3055)
 * [2](https://www.youtube.com/watch?v=r9pRXcwtEGk), by [zzApotheosis](https://www.youtube.com/@zzApotheosis)
-* [3](https://www.youtube.com/watch?v=nOoDNpVh2ww), by [To Asgaard](https://www.youtube.com/@ToAsgaard)
-* [4](https://www.youtube.com/watch?v=8rBhQP1xqEU), by [The MindCrafters](https://www.youtube.com/channel/UCf2wEy4_BbYpAQcgvN26OaQ)
-* [5](https://www.youtube.com/watch?v=-BM9F3Bz-9w), by [direwolf20](https://www.youtube.com/@direwolf20)
-* [6](https://www.youtube.com/watch?v=RSQ-GDJgAKk), by [Lashmak](https://www.youtube.com/@Lashmak)
-* [7](https://www.youtube.com/watch?v=poKzJBhZoVM), by [JaviHerobrine](https://www.youtube.com/@JaviHerobrine)
-* [8](https://www.youtube.com/watch?v=zrIOkNlaLiQ), by [ShaneyFangzz](https://www.youtube.com/@ShaneyFangzz)
+* [3](https://www.youtube.com/watch?v=pmRWGzYRbHE), by [zzApotheosis](https://www.youtube.com/@zzApotheosis)
+* [4](https://www.youtube.com/watch?v=nOoDNpVh2ww), by [To Asgaard](https://www.youtube.com/@ToAsgaard)
+* [5](https://www.youtube.com/watch?v=8rBhQP1xqEU), by [The MindCrafters](https://www.youtube.com/channel/UCf2wEy4_BbYpAQcgvN26OaQ)
+* [6](https://www.youtube.com/watch?v=-BM9F3Bz-9w), by [direwolf20](https://www.youtube.com/@direwolf20)
+* [7](https://www.youtube.com/watch?v=RSQ-GDJgAKk), by [Lashmak](https://www.youtube.com/@Lashmak)
+* [8](https://www.youtube.com/watch?v=poKzJBhZoVM), by [JaviHerobrine](https://www.youtube.com/@JaviHerobrine)
+* [9](https://www.youtube.com/watch?v=zrIOkNlaLiQ), by [ShaneyFangzz](https://www.youtube.com/@ShaneyFangzz)
 
 
 ### Features
