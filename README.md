@@ -20,7 +20,8 @@ You can find many very well made youtube tutorials on how to set this up
 * [6](https://www.youtube.com/watch?v=-BM9F3Bz-9w), by [direwolf20](https://www.youtube.com/@direwolf20)
 * [7](https://www.youtube.com/watch?v=RSQ-GDJgAKk), by [Lashmak](https://www.youtube.com/@Lashmak)
 * [8](https://www.youtube.com/watch?v=poKzJBhZoVM), by [JaviHerobrine](https://www.youtube.com/@JaviHerobrine)
-* [9](https://www.youtube.com/watch?v=zrIOkNlaLiQ), by [ShaneyFangzz](https://www.youtube.com/@ShaneyFangzz)
+* [9](https://www.youtube.com/watch?v=b6_PgtkiTXI), by [direwolf20](https://www.youtube.com/@direwolf20)
+* [10](https://www.youtube.com/watch?v=zrIOkNlaLiQ), by [ShaneyFangzz](https://www.youtube.com/@ShaneyFangzz)
 
 
 ### Features
