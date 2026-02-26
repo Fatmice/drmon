@@ -72,7 +72,7 @@ You can find many very well made youtube tutorials on how to set this up
 
 ### Upgrading to the latest version
 * Right click your computer
-* Rold ctrl+t until you get a `>`
+* Hold Ctrl+t until you get a `>`
 
 ```
 > install
