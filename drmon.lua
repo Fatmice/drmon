@@ -439,7 +439,7 @@ function update()
                 --print("desiredGeneration: " .. desiredGeneration)
 
             if ri.temperature <= targetTemperature then
-                setFlow = math.max(desiredGeneration, desiredFlow)
+                setFlow = math.min(desiredGeneration, desiredFlow - underFlow)
                 if math.abs(epsilon * 1000000) > 1 then
                     if underCount > 5 then
                         underFlow = math.max(underFlow - 1, fineUnderFlow)
@@ -447,6 +447,8 @@ function update()
                     end
                     underCount = underCount + 1
                     --print("underCount: " .. underCount)
+                else
+                    underFlow = math.max(underFlow, previousUnderFlow or 125)
                 end
                 overCount = 0
             else
@@ -454,6 +456,7 @@ function update()
                 setFlow = math.min(desiredGeneration, desiredFlow - underFlow)
                 if math.abs(epsilon * 1000000) > 1 then
                     if overCount > 5 then
+                        previousUnderFlow = underFlow
                         underFlow = underFlow + 1
                         overCount = 0
                     end
