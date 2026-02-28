@@ -30,9 +30,8 @@ local curInputGate			= 222000
 local tempFactor			= math.min((targetTemperature / 10000) * 50, 99)
 local radiationPressure		= (tempFactor * tempFactor * tempFactor * tempFactor) / (100 - tempFactor)
 local temperatureOffset		= 444.7		-- DO NOT Change!
-local fineAdjustments		= 650
-local fineUnderFlow			= 25
-local underFlow				= 0
+local expoAdjustments		= 650
+local fineAdjustments		= 25
 local underCount			= 0
 local overCount				= 0
 local saveTrigger			= 0
@@ -102,8 +101,8 @@ function save_config()
 	sw.writeLine(version)
 	sw.writeLine(autoInputGate)
 	sw.writeLine(curInputGate)
+	sw.writeLine(expoAdjustments)
 	sw.writeLine(fineAdjustments)
-	sw.writeLine(underFlow)
 	sw.close()
 end
 
@@ -113,8 +112,8 @@ function load_config()
 	version			= sr.readLine()
 	autoInputGate	= tonumber(sr.readLine())
 	curInputGate	= tonumber(sr.readLine())
+	expoAdjustments	= tonumber(sr.readLine())
 	fineAdjustments	= tonumber(sr.readLine())
-	underFlow		= tonumber(sr.readLine())
 	sr.close()
 end
 
@@ -427,45 +426,38 @@ function update()
 			local epsilon = (ri.temperature - targetTemperature) / targetTemperature
 
 			if math.abs(epsilon * 10000) <= 5 then
-				fineAdjustments = math.abs(desiredFlow - desiredGeneration) * math.exp(epsilon)
-				desiredFlow = desiredFlow - fineAdjustments
+				expoAdjustments = math.abs(desiredFlow - desiredGeneration) * math.exp(epsilon)
+				desiredFlow = desiredFlow - expoAdjustments
 				--print("desiredFlow1: " .. desiredFlow)
 			else
-				fineAdjustments = math.min(math.abs(desiredFlow - desiredGeneration) * (1 - math.abs(epsilon)), 10000)
-				desiredFlow = desiredFlow - fineAdjustments
+				expoAdjustments = math.min(math.abs(desiredFlow - desiredGeneration) * (1 - math.abs(epsilon)), 10000)
+				desiredFlow = desiredFlow - expoAdjustments
 				--print("desiredFlow2: " .. desiredFlow)
 			end
-			--print("fineAdjustments: " .. fineAdjustments)
+			--print("expoAdjustments: " .. expoAdjustments)
 			--print("desiredGeneration: " .. desiredGeneration)
-			setFlow = math.min(desiredGeneration, desiredFlow - underFlow)
 
-			if ri.temperature <= targetTemperature then
-				overCount = 0
-				if math.abs(epsilon * 1000000) > 1 then
-					if underCount > 5 then
-						underFlow = math.max(underFlow - 1, fineUnderFlow)
-						underCount = 0
-					end
+			if math.abs(epsilon * 1000000) > 1 then
+				if ri.temperature <= targetTemperature then
 					underCount = underCount + 1
-					--print("underCount: " .. underCount)
-				else
-					underFlow = math.max(underFlow, previousUnderFlow or 125)
-				end
-			else
-				print("underFlow: " .. underFlow)
-				underCount = 0
-				if math.abs(epsilon * 1000000) > 1 then
-					if overCount > 5 then
-						previousUnderFlow = underFlow
-						underFlow = underFlow + 1
-						overCount = 0
+					if math.mod(underCount,6) == 5 then
+						fineAdjustments = fineAdjustments - 1
 					end
+					print("underCount: " .. underCount)
+					overCount = 0
+				else
 					overCount = overCount + 1
-					--print("overCount: " .. overCount)
+					if math.mod(overCount,6) == 5 then
+						fineAdjustments = fineAdjustments + 1
+					end
+					print("overCount: " .. overCount)
+					underCount = 0
 				end
 			end
+			setFlow = (desiredFlow - fineAdjustments)
 			fluxgate.setSignalLowFlow(setFlow)
-			--print("epsilon: " .. (epsilon * 1000000))
+			print("epsilon: " .. (epsilon * 1000000))
+			print("fineAdjustments: " .. fineAdjustments)
 			print("SetFlow: " .. setFlow)
 			saveTrigger = saveTrigger + 1
 			if saveTrigger > 599 then
