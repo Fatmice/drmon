@@ -411,15 +411,18 @@ function update()
 			local radicant1 = r1 + root((r2 + r3), (1 / 2))
 			local radicant2 = r1 - root((r2 + r3), (1 / 2))
 			local zero = root(radicant1, (1 / 3)) + root(radicant2, (1 / 3))
-
+			--print("zero: " .. zero)
 			------ Find corresponding saturation
+			if zero < 0 then
+				zero = 0.01
+			end
 			local percent = 1 - (zero / 99)
 			local desiredSaturation = math.floor(percent * ri.maxEnergySaturation)
 			local desiredCoreSaturation = desiredSaturation / ri.maxEnergySaturation
 			local differenceInSaturation = ri.energySaturation - desiredSaturation
 			local scale = differenceInSaturation / desiredSaturation
 			local normalizationFactor =  differenceInSaturation / (ri.maxEnergySaturation - desiredSaturation)
-
+			--print("desiredSaturation: " .. desiredSaturation)
 			------ Find corresponding generation
 			local maxGeneration = (ri.maxEnergySaturation / 1000) * reactorFactor * 1.5 * 10 * (conversionLeveL * 2 + 1)
 			local desiredGeneration = (1 - desiredCoreSaturation) * maxGeneration
@@ -446,7 +449,7 @@ function update()
 				desiredFlow = desiredFlow - expoAdjustments
 				--print("desiredFlow1: " .. desiredFlow)
 			else
-				expoAdjustments = math.min(math.abs(desiredFlow - desiredGeneration) * (1 - math.abs(epsilon)), 10000)
+				expoAdjustments = math.min(math.abs(desiredFlow - desiredGeneration) * (1 - math.abs(epsilon)), 1000000)
 				desiredFlow = desiredFlow - expoAdjustments
 				--print("desiredFlow2: " .. desiredFlow)
 			end
