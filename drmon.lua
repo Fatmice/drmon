@@ -30,8 +30,8 @@ local curInputGate			= 222000
 local tempFactor			= math.min((targetTemperature / 10000) * 50, 99)
 local radiationPressure		= (tempFactor * tempFactor * tempFactor * tempFactor) / (100 - tempFactor)
 local temperatureOffset		= 444.7		-- DO NOT Change!
-local expoAdjustments		= 650
-local fineAdjustments		= 25
+local expoAdjustments		= 6500
+local fineAdjustments		= 1368
 local underCount			= 0
 local overCount				= 0
 local saveTrigger			= 0
@@ -99,6 +99,7 @@ mon.monitor = win
 function save_config()
 	local sw = fs.open("config.txt", "w")
 	sw.writeLine(version)
+	sw.writeLine(newReactorChecked)
 	sw.writeLine(autoInputGate)
 	sw.writeLine(curInputGate)
 	sw.writeLine(expoAdjustments)
@@ -108,12 +109,13 @@ end
 
 -- read settings from file
 function load_config()
-	local sr		= fs.open("config.txt", "r")
-	version			= sr.readLine()
-	autoInputGate	= tonumber(sr.readLine())
-	curInputGate	= tonumber(sr.readLine())
-	expoAdjustments	= tonumber(sr.readLine())
-	fineAdjustments	= tonumber(sr.readLine())
+	local sr			= fs.open("config.txt", "r")
+	version				= sr.readLine()
+	newReactorChecked	= (sr.readLine() == "true") and true or false
+	autoInputGate		= tonumber(sr.readLine())
+	curInputGate		= tonumber(sr.readLine())
+	expoAdjustments		= tonumber(sr.readLine())
+	fineAdjustments		= tonumber(sr.readLine())
 	sr.close()
 end
 
@@ -123,6 +125,20 @@ if fs.exists("config.txt") == false then
 else
 	load_config()
 end
+
+-- core initialization
+local corestartup = {
+	{["fuelPct"] = 99.9, ["input"] = 1925000, ["output"] = 7000000, ["fineAdj"] = -120},
+	{["fuelPct"] = 85.0, ["input"] = 1825000, ["output"] = 9000000, ["fineAdj"] = -110},
+	{["fuelPct"] = 75.0, ["input"] = 1725000, ["output"] = 12000000, ["fineAdj"] = -100},
+	{["fuelPct"] = 65.0, ["input"] = 1625000, ["output"] = 15000000, ["fineAdj"] = -50},
+	{["fuelPct"] = 55.0, ["input"] = 1525000, ["output"] = 17000000, ["fineAdj"] = -30},
+	{["fuelPct"] = 45.0, ["input"] = 1425000, ["output"] = 21000000, ["fineAdj"] = -10},
+	{["fuelPct"] = 35.0, ["input"] = 1325000, ["output"] = 23000000, ["fineAdj"] = 40},
+	{["fuelPct"] = 25.0, ["input"] = 1225000, ["output"] = 24000000, ["fineAdj"] = 100},
+	{["fuelPct"] = 15.0, ["input"] = 1125000, ["output"] = 25000000, ["fineAdj"] = 200},
+	{["fuelPct"] = 05.0, ["input"] = 1025000, ["output"] = 20000000, ["fineAdj"] = 500}
+}
 
 function buttons()
 	while true do
@@ -437,21 +453,23 @@ function update()
 			--print("expoAdjustments: " .. expoAdjustments)
 			--print("desiredGeneration: " .. desiredGeneration)
 
-			if math.abs(epsilon * 1000000) > 1 then
-				if ri.temperature <= targetTemperature then
-					underCount = underCount + 1
-					if math.mod(underCount,6) == 5 then
-						fineAdjustments = fineAdjustments - 1
+			if math.abs(ri.temperature - targetTemperature) <= 0.1 then
+				if math.abs(epsilon * 1000000) > 1 then
+					if ri.temperature <= targetTemperature then
+						underCount = underCount + 1
+						if math.mod(underCount,6) == 5 then
+							fineAdjustments = fineAdjustments - 1
+						end
+						print("underCount: " .. underCount)
+						overCount = 0
+					else
+						overCount = overCount + 1
+						if math.mod(overCount,6) == 5 then
+							fineAdjustments = fineAdjustments + 1
+						end
+						print("overCount: " .. overCount)
+						underCount = 0
 					end
-					print("underCount: " .. underCount)
-					overCount = 0
-				else
-					overCount = overCount + 1
-					if math.mod(overCount,6) == 5 then
-						fineAdjustments = fineAdjustments + 1
-					end
-					print("overCount: " .. overCount)
-					underCount = 0
 				end
 			end
 			setFlow = (desiredFlow - fineAdjustments)
@@ -522,27 +540,41 @@ function update()
 		----------------------------------------------------------------
 		-- NEW REACTOR CHECK (run once per boot)
 		----------------------------------------------------------------
-		if (not newReactorChecked) then
-			-- brand-new core: 100% fuel remaining
-			if fuelPercent >= 99.9 then
-				fluxgate.setSignalLowFlow(3000000)
-				inputfluxgate.setSignalLowFlow(222000)
-				curInputGate = 222000        -- also reset manual input setting
-				autoInputGate = 1
-				autoOutputGate = 1
+		if (not newReactorChecked) and (ri.status == "charging" or ri.status == "warming_up") then
+			for _, stage in ipairs(corestartup) do
+				if fuelPercent >= stage.fuelPct then
+					inputfluxgate.setSignalLowFlow(stage.input)
+					fluxgate.setSignalLowFlow(stage.output)
+					curInputGate = stage.input	-- also reset manual input setting
+					autoInputGate = 1
+					autoOutputGate = 1
+					fineAdjustments = stage.fineAdj
+					break
+				end
 			end
 			newReactorChecked = true
+			save_config()
 		end
+
+		----------------------------------------------------------------
+		-- REACTOR SHUTDOWN
+		----------------------------------------------------------------
 		if ri.status == "cooling" or ri.status == "stopping" or ri.status == "cold" then
 			cFlow = 3000000
 			fluxgate.setSignalLowFlow(cFlow)
-			newReactorChecked = false
 			if (not ri.failSafe) and ri.temperature <= 3000 and satPercent >= 99 then
 				reactor.toggleFailSafe()
 			end
 		end
 		if ri.status == "cold" then
 			inputfluxgate.setSignalLowFlow(0)
+			if newReactorChecked then
+				newReactorChecked = false
+				save_config()
+			end
+			if saveTrigger > 0 then
+				saveTrigger = 0
+			end
 		end
 
 		sleep(0.1)
